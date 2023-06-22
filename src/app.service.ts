@@ -12,7 +12,7 @@ export class AppService {
   async generateQRCode(url: string) {
     const sdClient = new SDClient();
 
-    const qrImageBuffer = await createQRCode(url);
+    const qrImageBuffer = await createQRCode({url: url});
 
     return sdClient.img2img(qrImageBuffer.toString('base64'));
   }

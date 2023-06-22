@@ -4,6 +4,8 @@ import { config } from './config'
 import { NewMessage, NewMessageEvent } from "telegram/events";
 import { SDClient } from "./sdClient/SDClient";
 import { createQRCode } from "./qrcode";
+import * as fs from "fs";
+import * as path from "path"
 
 const { telegramToken, telegramApiId, telegramApiHash } = config
 
@@ -31,23 +33,23 @@ export const initTelegramClient = async () => {
     }
 
     await client.sendMessage(sender, {
-      message: 'Please send me a link and provide a prompt: /gen :link :prompt'
+      message: 'Send a message with the "qr" command and your prompts: /qr LINK PROMPTS.'
     })
 
     await client.sendMessage(sender, {
-      message: 'example: /gen https://h.country anime girl, sky, colorful',
+      message: 'Example: /qr h.country/ai astronaut, sky, colorful',
       linkPreview: false,
     })
 
-    const qrImageBuffer = await createQRCode('https://h.country');
-    const imgBuffer = await sdClient.img2img(qrImageBuffer.toString('base64'));
+    // const qrImageBuffer = await createQRCode({value: 'h.country'});
+    // const imgBuffer = await sdClient.img2img(qrImageBuffer.toString('base64'), 'astronaut, sky, colorful');
 
-    if (!imgBuffer) {
-      return;
-    }
+    const filePath = path.join(__dirname, '../files/qrcodes/demo_astronaut_qr.png');
+    const imgBuffer = fs.readFileSync(filePath)
+
     // hack from gramjs type docs
     // @ts-ignore
-    imgBuffer.name = event.message.text + '.png';
+    imgBuffer.name = 'demo.png';
 
     client.sendMessage(sender, {
       file: imgBuffer,
@@ -72,12 +74,12 @@ export const initTelegramClient = async () => {
         return;
       }
 
-      if (command == "/gen") {
+      if (command == "/qr") {
         await client.sendMessage(sender, {
           message: 'Wait a minute...'
         });
 
-        const qrImageBuffer = await createQRCode(url);
+        const qrImageBuffer = await createQRCode({url: url, margin: 1});
         const imgBuffer = await sdClient.img2img(qrImageBuffer.toString('base64'), prompts.join(' '));
 
         if (!imgBuffer) {
@@ -88,7 +90,7 @@ export const initTelegramClient = async () => {
         // @ts-ignore
         imgBuffer.name = message.text + '.png';
         client.sendMessage(sender, {
-            message: url,
+            message: url + ' ' + prompts.join(' '),
             file: imgBuffer,
         })
       }
