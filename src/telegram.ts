@@ -79,21 +79,31 @@ export const initTelegramClient = async () => {
           message: 'Wait a minute...'
         });
 
-        const qrImageBuffer = await createQRCode({url: url, margin: 1});
-        const imgBuffer = await sdClient.img2img(qrImageBuffer.toString('base64'), prompts.join(' '));
+        try {
+          const qrImageBuffer = await createQRCode({url: url, margin: 1});
+          const imgBuffer = await sdClient.img2img(qrImageBuffer.toString('base64'), prompts.join(' '));
 
-        if (!imgBuffer) {
-          return;
-        }
+          if (!imgBuffer) {
+            return;
+          }
 
-        // hack from gramjs type docs
-        // @ts-ignore
-        imgBuffer.name = message.text + '.png';
-        client.sendMessage(sender, {
+          // hack from gramjs type docs
+          // @ts-ignore
+          imgBuffer.name = message.text + '.png';
+          client.sendMessage(sender, {
             message: url + ' ' + prompts.join(' '),
             file: imgBuffer,
-        })
+          })
+        } catch (ex) {
+          client.sendMessage(sender, {
+            message: 'internal error'
+          });
+        }
+
+        return;
       }
+
+      sendHelp(event)
     }
   }
 

@@ -1,6 +1,7 @@
 import {Controller, Get, Query, Res} from '@nestjs/common';
 import { AppService } from './app.service';
 import { Response } from 'express';
+import {createQRCode} from "./qrcode";
 
 @Controller()
 export class AppController {
@@ -16,16 +17,13 @@ export class AppController {
 
   @Get('qr')
   async generateQRCode(@Res() res: Response, @Query('url') url: string) {
-    console.log('### url', url);
-
     if (!url) {
       res.json({'error': 'expected url param'});
       return;
     }
-    const a = await this.appService.generateQRCode(url);
-    // return this.appService.getHello();
+    const qrImageBuffer = await createQRCode({url: url, margin: 1});
 
     res.setHeader('Content-Type', 'image/png')
-    res.send(a);
+    res.send(qrImageBuffer);
   }
 }
