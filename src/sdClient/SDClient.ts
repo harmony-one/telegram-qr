@@ -1,5 +1,5 @@
 import axios from "axios";
-import {config} from "../config";
+import {config} from "../config.js";
 
 type Img2ImgResponse = {
   images: string[]
@@ -13,7 +13,7 @@ const getImg2ImgConfig = ({imgBase64, prompt}: {prompt: string, imgBase64: strin
   return {
     "init_images": [imgBase64],
     "prompt": prompt,
-    "negative_prompt": "worst quality, low quality, normal quality, lowres, ugly, disfigured, low quality, blurry, fewer fingers, bad hand, strange hand, (worst quality, low quality:1.4), monochrome, zombie, (interlocked fingers)",
+    "negative_prompt": "(KHFB, AuroraNegative),(Worst Quality, Low Quality:1.4)",
     "seed": -1,
     "subseed": -1,
     "subseed_strength": 0,
@@ -39,7 +39,7 @@ const getImg2ImgConfig = ({imgBase64, prompt}: {prompt: string, imgBase64: strin
             // "mask": "pixel_perfect",
             "resize_mode": 0,
             "control_mode": 0,
-            "guidance_start": 0.2,
+            "guidance_start": 0.20,
             "guidance_end": 0.9,
             "pixel_perfect": true,
           }
@@ -52,7 +52,7 @@ const getImg2ImgConfig = ({imgBase64, prompt}: {prompt: string, imgBase64: strin
 const getTxt2ImgConfig = ({imgBase64, prompt}: {prompt: string, imgBase64: string}) => {
   return {
     "prompt": prompt,
-    "negative_prompt": "(KHFB, AuroraNegative),(Worst Quality, Low Quality:1.4), normal quality, lowres, ugly, disfigured, low quality, blurry, fewer fingers, bad hand, strange hand, (worst quality, low quality:1.4), monochrome, zombie, (interlocked fingers)",
+    "negative_prompt": "(KHFB, AuroraNegative),(Worst Quality, Low Quality:1.4)",
     "seed": -1,
     "subseed": -1,
     "subseed_strength": 0,
@@ -60,8 +60,8 @@ const getTxt2ImgConfig = ({imgBase64, prompt}: {prompt: string, imgBase64: strin
     "batch_size": 1,
     "n_iter": 1,
     "steps": 60,
-    width: '700',
-    height: '700',
+    width: '600',
+    height: '600',
     "cfg_scale": 7,
     "seed_resize_from_h": -1,
     "seed_resize_from_w": -1,
@@ -78,7 +78,7 @@ const getTxt2ImgConfig = ({imgBase64, prompt}: {prompt: string, imgBase64: strin
             // "mask": "pixel_perfect",
             "resize_mode": 0,
             "control_mode": 0,
-            "guidance_start": 0,
+            "guidance_start": 0.8,
             "guidance_end": 0.75,
             "pixel_perfect": true,
           }

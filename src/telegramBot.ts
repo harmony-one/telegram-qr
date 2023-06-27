@@ -1,8 +1,10 @@
 import {Bot, Context, InputFile, MemorySessionStorage, session, SessionFlavor} from "grammy";
 import { config } from './config'
 import * as path from "path";
-import {createQRCode} from "./qrcode";
+import {createQRCode, isQRCodeReadable} from "./qrcode";
+import pRetry from "p-retry";
 import {SDClient} from "./sdClient/SDClient";
+
 
 interface SessionData {
     qrMargin: number
@@ -21,7 +23,26 @@ const sendQrCodeImg2Img = async (url: string, prompt: string, ctx: BotContext) =
 
   try {
     const qrImageBuffer = await createQRCode({url: url, margin: ctx.session.qrMargin});
-    const imgBuffer = await sdClient.img2img(qrImageBuffer.toString('base64'), prompt);
+
+    const operation = async () => {
+
+      console.log('### retry');
+
+      const imgBuffer = await sdClient.img2img(qrImageBuffer.toString('base64'), prompt);
+
+      if (!imgBuffer) {
+        throw new Error('internal error unreadable');
+      }
+
+      if (!isQRCodeReadable(imgBuffer)) {
+        throw new Error('unreadable');
+      }
+
+      return imgBuffer;
+    }
+
+    // @ts-expect-error
+    const imgBuffer = await pRetry(operation, {retries: 10});
 
     if (!imgBuffer) {
       // TODO: send feedback
@@ -33,12 +54,14 @@ const sendQrCodeImg2Img = async (url: string, prompt: string, ctx: BotContext) =
       caption: command,
     })
   } catch (ex) {
+    console.log('### ex', ex);
     ctx.reply('internal error')
   }
 }
 
 export const initTelegramBot = (): Bot => {
 
+  console.log('### config', config);
   const bot = new Bot<BotContext>(config.telegramToken);
 
   function createInitialSessionData(): SessionData {
@@ -88,9 +111,28 @@ export const initTelegramBot = (): Bot => {
         return;
       }
 
+
+
       try {
         const qrImageBuffer = await createQRCode({url: url, margin: ctx.session.qrMargin});
-        const imgBuffer = await sdClient.text2img(qrImageBuffer.toString('base64'), prompts.join(' '));
+
+        const operation = async () => {
+
+          const imgBuffer = await sdClient.text2img(qrImageBuffer.toString('base64'), prompts.join(' '));
+
+          if (!imgBuffer) {
+            throw new Error('internal error unreadable');
+          }
+
+          if (!isQRCodeReadable(imgBuffer)) {
+            throw new Error('unreadable');
+          }
+
+          return imgBuffer;
+        }
+
+        // @ts-expect-error
+        const imgBuffer = await pRetry(operation, {retries: 10});
 
         if (!imgBuffer) {
           // TODO: send feedback
@@ -105,7 +147,7 @@ export const initTelegramBot = (): Bot => {
 
 
       } catch (ex) {
-        ctx.reply('internal error')
+        ctx.reply('/qr2 internal error')
       }
     })()
   })

@@ -1,4 +1,5 @@
 import * as process from 'process';
+import 'dotenv/config'
 
 export const config = {
   port: 8080,
